@@ -34,6 +34,11 @@ def get_neo4j_data():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/")
+def hello():
+    return "Hello, World!"
+
+
 # Start the Flask app
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
