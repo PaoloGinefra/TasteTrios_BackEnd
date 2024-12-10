@@ -28,7 +28,9 @@ def get_neo4j_data():
             result = session.run("MATCH (n) RETURN n LIMIT 5")
             data = [record['n'] for record in result.data()]
 
-        return jsonify(data)
+        response = jsonify(data)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
