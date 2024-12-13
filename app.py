@@ -2,12 +2,15 @@ from flask import Flask, jsonify, request
 from neo4j import GraphDatabase
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Get credentials from environment variables
 uri = os.getenv("NEO4J_URI")
@@ -54,6 +57,15 @@ def check_ingredient():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/neo4j/checkIngredient", methods=["OPTIONS"])
+def check_ingredient_options():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
 
 
 @app.route("/")
