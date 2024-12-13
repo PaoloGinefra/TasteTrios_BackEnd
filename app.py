@@ -41,6 +41,12 @@ def get_neo4j_data():
 
 @app.route("/api/neo4j/checkIngredient", methods=["POST"])
 def check_ingredient():
+    """Check if an ingredient exists in the database.
+    The ingredient is passed in the request body as a JSON object with the key "ingredient".
+
+    Returns:
+        A JSON object with a key "exists" that is True if the ingredient exists in the database and False
+    """
     try:
         # Create a session and run a query
         with driver.session() as session:
@@ -61,6 +67,41 @@ def check_ingredient():
 
 @app.route("/api/neo4j/checkIngredient", methods=["OPTIONS"])
 def check_ingredient_options():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
+
+
+@app.route("/api/neo4j/matchIngredients", methods=["POST"])
+def matchIngredients():
+    """Returns a list of recipes that must contain at least one of the ingredients in the list. The results are sorted by the number of ingredients that match the query.
+    The ingredients are passed in the request body as a JSON object with the key "ingredients".
+
+    Returns:
+        A JSON object with a key "recipes" that is a list of recipes matches. For each recipe match, the object contains the keys
+          "matchingScore" (the number of ingredients that match the query) and "recipe" (the recipe object).
+    """
+    try:
+        # Create a session and run a query
+        with driver.session() as session:
+            ingredients = request.json['ingredients']
+            result = session.run(
+                "MATCH (r:Recipe)-[:CONTAINS]->(i:Ingredient) WHERE i.name IN $ingredients RETURN r, count(i) as matchingScore ORDER BY matchingScore DESC", ingredients=ingredients)
+            data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
+                    for record in result.data()]
+
+        response = jsonify({"recipes": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/neo4j/matchIngredients", methods=["OPTIONS"])
+def matchIngredients_options():
     response = jsonify({"status": "OK"})
     response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
