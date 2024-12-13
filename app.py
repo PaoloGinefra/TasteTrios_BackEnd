@@ -91,7 +91,7 @@ def matchIngredients():
             limitString = ""
             if ("limit" in request.json):
                 limit = request.json['limit']
-                limitString = "LIMIT $limit"
+                limitString = " LIMIT $limit"
 
             result = session.run(
                 "MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name IN $ingredients WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC" + limitString, ingredients=ingredients)
