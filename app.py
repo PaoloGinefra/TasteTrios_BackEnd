@@ -98,7 +98,7 @@ def matchIngredients():
             data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
                     for record in result.data()]
 
-        response = jsonify({"recipes": data})
+        response = jsonify(data)
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
