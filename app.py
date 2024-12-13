@@ -78,6 +78,7 @@ def check_ingredient_options():
 def matchIngredients():
     """Returns a list of recipes that must contain at least one of the ingredients in the list. The results are sorted by the number of ingredients that match the query.
     The ingredients are passed in the request body as a JSON object with the key "ingredients".
+    A limit parameter can be passed in the request body to limit the number of results.
 
     Returns:
         A JSON object with a key "recipes" that is a list of recipes matches. For each recipe match, the object contains the keys
@@ -87,14 +88,11 @@ def matchIngredients():
         # Create a session and run a query
         with driver.session() as session:
             ingredients = request.json['ingredients']
+            limit = request.json.get('limit', 10)
             result = session.run(
-                "MATCH (r:Recipe)-[:CONTAINS]->(i:Ingredient) WHERE i.name IN $ingredients RETURN r, count(i) as matchingScore ORDER BY matchingScore DESC", ingredients=ingredients)
+                "MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name IN $ingredients WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC LIMIT $limit", ingredients=ingredients, limit=limit)
             data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
                     for record in result.data()]
-
-        response = jsonify({"recipes": data})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        return response
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
