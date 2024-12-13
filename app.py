@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from neo4j import GraphDatabase
 import os
 from dotenv import load_dotenv
@@ -20,7 +20,7 @@ driver = GraphDatabase.driver(uri, auth=(username, password))
 # Define a route to fetch data from Neo4j
 
 
-@app.route("/api/neo4j-data", methods=["GET"])
+@app.route("/api/neo4j/data", methods=["GET"])
 def get_neo4j_data():
     try:
         # Create a session and run a query
@@ -29,6 +29,26 @@ def get_neo4j_data():
             data = [record['n'] for record in result.data()]
 
         response = jsonify(data)
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/neo4j/checkIngredient", methods=["POST"])
+def check_ingredient():
+    try:
+        # Create a session and run a query
+        with driver.session() as session:
+            ingredient = request.json['ingredient']
+            result = session.run(
+                "MATCH (n:Ingredient) WHERE n.name = $ingredient RETURN n", ingredient=ingredient)
+            data = [record['n'] for record in result.data()]
+
+        # Return whether the ingredient is in the database
+        exists = len(data) > 0
+        response = jsonify({"exists": exists})
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
