@@ -88,9 +88,13 @@ def matchIngredients():
         # Create a session and run a query
         with driver.session() as session:
             ingredients = request.json['ingredients']
-            limit = request.json.get('limit', 10)
+            limitString = ""
+            if ("limit" in request.json):
+                limit = request.json['limit']
+                limitString = "LIMIT $limit"
+
             result = session.run(
-                "MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name IN $ingredients WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC LIMIT $limit", ingredients=ingredients, limit=limit)
+                "MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name IN $ingredients WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC" + limitString, ingredients=ingredients)
             data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
                     for record in result.data()]
 
