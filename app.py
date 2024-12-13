@@ -98,6 +98,10 @@ def matchIngredients():
             data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
                     for record in result.data()]
 
+        response = jsonify({"recipes": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
