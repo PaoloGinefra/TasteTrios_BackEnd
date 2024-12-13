@@ -89,20 +89,16 @@ def matchIngredients():
         with driver.session() as session:
             ingredients = request.json['ingredients']
             limitString = ""
-            if "limit" in request.json:
+            if ("limit" in request.json):
                 limit = request.json['limit']
                 limitString = f" LIMIT {limit}"
 
-            query = (
-                "MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name IN $ingredients "
-                "WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC"
-                + limitString
-            )
-            result = session.run(query, ingredients=ingredients)
+            result = session.run(
+                "MATCH (r:Recipe)-[:REQUIRES]->(i:Ingredient) WHERE i.name IN $ingredients WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC", ingredients=ingredients)
             data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
                     for record in result.data()]
 
-        response = jsonify(data)
+        response = jsonify({"recipes": data})
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
