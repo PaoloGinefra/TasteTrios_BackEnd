@@ -101,7 +101,7 @@ def matchIngredients():
                 RETURN r, matchingScore, matchingIngredients ORDER BY matchingScore DESC
                 """
                 + limitString, ingredients=ingredients)
-            data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
+            data = [{"matchingScore": record['matchingScore'], "recipe": record['r'], "matchingIngredients": record['matchingIngredients']}
                     for record in result.data()]
 
         response = jsonify({"recipes": data})
