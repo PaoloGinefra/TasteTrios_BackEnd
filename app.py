@@ -121,6 +121,42 @@ def matchIngredients_options():
     return response
 
 
+@app.route("/api/neo4j/getIngredients", methods=["POST"])
+def getIngredients():
+    """Returns a list of all the ingredients recessary for a recipe.
+    The recipe is passed in the request body as a JSON object with the key "recipe".
+
+    Returns:
+        A JSON object with a key "ingredients" that is a list of ingredients for the recipe.
+    """
+    try:
+        # Create a session and run a query
+        with driver.session() as session:
+            recipe = request.json['recipe']
+            result = session.run(
+                """
+                MATCH (r:Recipe)-[:CONTAINS]->(i:Ingredient)
+                WHERE r.name = $recipe
+                RETURN COLLECT(i.name) AS ingredients
+                """, recipe=recipe)
+            data = result.single()['ingredients']
+
+        response = jsonify({"ingredients": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/neo4j/getIngredients", methods=["OPTIONS"])
+def getIngredients_option():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
+
+
 @app.route("/")
 def hello():
     return "Hello, World!"
