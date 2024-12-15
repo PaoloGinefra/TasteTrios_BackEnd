@@ -94,7 +94,13 @@ def matchIngredients():
                 limitString = f" LIMIT {limit}"
 
             result = session.run(
-                "MATCH (r:Recipe)-[:CONTAINS]->(i:Ingredient) WHERE i.name IN $ingredients WITH r, count(i) AS matchingScore RETURN r, matchingScore ORDER BY matchingScore DESC" + limitString, ingredients=ingredients)
+                """
+                MATCH (r:Recipe)-[:CONTAINS]->(i:Ingredient)
+                WHERE i.name IN $ingredients
+                WITH r, count(i) AS matchingScore, COLLECT(i.name) AS matchingIngredients
+                RETURN r, matchingScore, matchingIngredients ORDER BY matchingScore DESC
+                """
+                + limitString, ingredients=ingredients)
             data = [{"matchingScore": record['matchingScore'], "recipe": record['r']}
                     for record in result.data()]
 
