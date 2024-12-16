@@ -3,6 +3,7 @@ from neo4j import GraphDatabase
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+from elasticsearch import Elasticsearch
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,11 +17,14 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 uri = os.getenv("NEO4J_URI")
 username = os.getenv("NEO4J_USERNAME")
 password = os.getenv("NEO4J_PASSWORD")
+bonsai_url = os.getenv("BONSAI_URL")
 
 # Create a Neo4j driver
 driver = GraphDatabase.driver(uri, auth=(username, password))
 
-# Define a route to fetch data from Neo4j
+# Create an Elasticsearch client
+es = Elasticsearch(bonsai_url,
+                   verify_certs=True)
 
 
 @app.route("/api/neo4j/data", methods=["GET"])
@@ -114,6 +118,48 @@ def matchIngredients():
 
 @app.route("/api/neo4j/matchIngredients", methods=["OPTIONS"])
 def matchIngredients_options():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
+
+
+@app.route("/api/elasticsearch/matchIngredients", methods=["POST"])
+def matchIngredients_es():
+    """Returns a list of recipes that must contain at least one of the ingredients in the list. The results are sorted by the number of ingredients that match the query.
+    The ingredients are passed in the request body as a JSON object with the key "ingredients".
+    A limit parameter can be passed in the request body to limit the number of results.
+
+    Returns:
+        A JSON object with a key "recipes" that is a list of recipes matches. For each recipe match, the object contains the keys
+          "matchingScore" (the number of ingredients that match the query) and "recipe" (the recipe object).
+    """
+    try:
+        # Create a session and run a query
+        ingredients = request.json['ingredients']
+        limit = request.json['limit']
+        body = {
+            "query": {
+                "bool": {
+                    "should": [{"match": {"ingredients": ingredient}} for ingredient in ingredients]
+                }
+            }
+        }
+        result = es.search(index="recipes", body=body, size=limit)
+        data = [{"matchingScore": len(record['_source']['ingredients']), "recipe": record['_source']}
+                for record in result['hits']['hits']]
+
+        response = jsonify({"recipes": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/elasticsearch/matchIngredients", methods=["OPTIONS"])
+def matchIngredients_es_options():
     response = jsonify({"status": "OK"})
     response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
