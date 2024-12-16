@@ -142,12 +142,19 @@ def matchIngredients_es():
         body = {
             "query": {
                 "bool": {
-                    "should": [{"match": {"ingredients": ingredient}} for ingredient in ingredients]
+                    "should": [{
+                        "match": {
+                            "RecipeIngredientParts": {
+                                "query": " ".join(ingredients),
+                                "operator": "or"
+                            }
+                        }
+                    }]
                 }
             }
         }
-        result = es.search(index="recipes", body=body, size=limit)
-        data = [{"matchingScore": len(record['_source']['ingredients']), "recipe": record['_source']}
+        result = es.search(index="recipeswithreviews", body=body, size=limit)
+        data = [{"matchingScore": record['_score'], "recipe": record['_source']}
                 for record in result['hits']['hits']]
 
         response = jsonify({"recipes": data})
