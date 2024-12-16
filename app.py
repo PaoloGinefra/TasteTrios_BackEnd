@@ -124,7 +124,7 @@ def matchIngredients_options():
 @app.route("/api/neo4j/getIngredients", methods=["POST"])
 def getIngredients():
     """Returns a list of all the ingredients recessary for a recipe.
-    The recipe is passed in the request body as a JSON object with the key "recipe".
+    The recipe is passed in the request body as a JSON object with the key "recipeId".
 
     Returns:
         A JSON object with a key "ingredients" that is a list of ingredients for the recipe.
@@ -132,11 +132,11 @@ def getIngredients():
     try:
         # Create a session and run a query
         with driver.session() as session:
-            recipe = request.json['recipe']
+            recipe = request.json['recipeId']
             result = session.run(
                 """
                 MATCH (r:Recipe)-[:CONTAINS]->(i:Ingredient)
-                WHERE r.name = $recipe
+                WHERE r.id = $recipe
                 RETURN COLLECT(i.name) AS ingredients
                 """, recipe=recipe)
             data = result.single()['ingredients']
