@@ -210,7 +210,7 @@ def getIngredients_option():
     return response
 
 
-@app.route("/api/neo4j/mix&max", methods=["POST"])
+@app.route("/api/neo4j/mixAndMmax", methods=["POST"])
 def mixAndMax():
     """Returns a list of ingredients that can be used with the ingredients in the list to create many recipes.
     The ingredients are passed in the request body as a JSON object with the key "ingredients".
@@ -257,7 +257,7 @@ def mixAndMax():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/neo4j/mix&max", methods=["OPTIONS"])
+@app.route("/api/neo4j/mixAndMax", methods=["OPTIONS"])
 def mixAndMax_option():
     response = jsonify({"status": "OK"})
     response.headers.add("Access-Control-Allow-Origin", "*")
