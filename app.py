@@ -202,7 +202,7 @@ def matchIngredientsAnd_es():
                         {
                             "match": {
                                 "RecipeIngredientParts": {
-                                    "query": " ".join(ingredients[-1]),
+                                    "query": " ".join(ingredients[:-1]),
                                     "operator": "or"
                                 }
                             }
