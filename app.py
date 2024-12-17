@@ -174,6 +174,55 @@ def matchIngredients_es_options():
     return response
 
 
+@app.route("/api/elasticsearch/matchIngredientsAnd", methods=["POST"])
+def matchIngredients_es():
+    """Returns a list of recipes that must contain all the ingredients in the list. The results are sorted by the number of ingredients that match the query.
+    The ingredients are passed in the request body as a JSON object with the key "ingredients".
+    A limit parameter can be passed in the request body to limit the number of results.
+
+    Returns:
+        A JSON object with a key "recipes" that is a list of recipes matches. For each recipe match, the object contains the keys
+          "matchingScore" (the number of ingredients that match the query) and "recipe" (the recipe object).
+    """
+    try:
+        # Create a session and run a query
+        ingredients = request.json['ingredients']
+        limit = request.json['limit']
+        body = {
+            "query": {
+                "bool": {
+                    "must": [{
+                        "match": {
+                            "RecipeIngredientParts": {
+                                "query": " ".join(ingredients),
+                                "operator": "and"
+                            }
+                        }
+                    }]
+                }
+            }
+        }
+        result = es.search(index="recipeswithreviews", body=body, size=limit)
+        data = [{"matchingScore": record['_score'], "recipe": record['_source']}
+                for record in result['hits']['hits']]
+
+        response = jsonify({"recipes": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/elasticsearch/matchIngredientsAnd", methods=["OPTIONS"])
+def matchIngredients_es_options():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
+
+
 @app.route("/api/neo4j/getIngredients", methods=["POST"])
 def getIngredients():
     """Returns a list of all the ingredients recessary for a recipe.
