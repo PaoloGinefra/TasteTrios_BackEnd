@@ -11,7 +11,7 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 # Get credentials from environment variables
 uri = os.getenv("NEO4J_URI")
