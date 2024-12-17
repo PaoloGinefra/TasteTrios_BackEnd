@@ -210,6 +210,56 @@ def getIngredients_option():
     return response
 
 
+@app.route("/api/neo4j/mix&max", methods=["POST"])
+def mixAndMax():
+    """Returns a list of ingredients that can be used with the ingredients in the list to create many recipes.
+    The ingredients are passed in the request body as a JSON object with the key "ingredients".
+    The number of recipes and average rating of the recipes that can be made with the ingredients is calculated.
+    The average number of the given ingredients in the recipes is also calculated.
+    Returns:
+        A JSON object with a key "ingredients" that is a list of objects with the keys "ingredient", "numRecipes", "avgRating" and "avgNumIngredients".
+    """
+
+    try:
+        # Create a session and run a query
+        with driver.session() as session:
+            ingredients = request.json['ingredients']
+            result = session.run(
+                """
+                WITH $providedIngredients AS ingredients
+                // Find recipes that contain an existing ingredient and additional matched ingredients
+                MATCH (i:Ingredient)<-[:CONTAINS]-(r:Recipe)-[:CONTAINS]->(i1:Ingredient)
+                WHERE i.name IN ingredients AND NOT i1.name IN ingredients
+                WITH DISTINCT r, i1.name AS matchedIngredient, ingredients
+
+                // Match reviews for these recipes and calculate the average rating for each matched recipe
+                MATCH (r)<-[:FOR]-(rev:Review)
+                WITH matchedIngredient, r, AVG(rev.rating) AS avgRating, ingredients
+
+                // Count the number of unique recipes for each matched ingredient
+                MATCH (r)-[:CONTAINS]->(i:Ingredient)
+                WHERE i.name IN ingredients
+                RETURN matchedIngredient, COUNT(DISTINCT r) AS recipeCount, AVG(avgRating) AS avgOfAvgRatings
+                ORDER BY recipeCount DESC
+                """, providedIngredients=ingredients)
+            data = [record for record in result.data()]
+
+        response = jsonify({"ingredients": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/neo4j/mix&max", methods=["OPTIONS"])
+def mixAndMax_option():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
+
+
 @app.route("/")
 def hello():
     return "Hello, World!"
