@@ -216,6 +216,7 @@ def mixAndMax():
     The ingredients are passed in the request body as a JSON object with the key "ingredients".
     The number of recipes and average rating of the recipes that can be made with the ingredients is calculated.
     The average number of the given ingredients in the recipes is also calculated.
+    A limit parameter can be passed in the request body to limit the number of results.
     Returns:
         A JSON object with a key "ingredients" that is a list of objects with the keys "ingredient", "numRecipes", "avgRating" and "avgNumIngredients".
     """
@@ -224,6 +225,10 @@ def mixAndMax():
         # Create a session and run a query
         with driver.session() as session:
             ingredients = request.json['ingredients']
+            limitString = ""
+            if ("limit" in request.json):
+                limit = request.json['limit']
+                limitString = f" LIMIT {limit}"
             result = session.run(
                 """
                 WITH $providedIngredients AS ingredients
@@ -241,7 +246,8 @@ def mixAndMax():
                 WHERE i.name IN ingredients
                 RETURN matchedIngredient, COUNT(DISTINCT r) AS recipeCount, AVG(avgRating) AS avgOfAvgRatings
                 ORDER BY recipeCount DESC
-                """, providedIngredients=ingredients)
+                """
+                + limitString, providedIngredients=ingredients)
             data = [record for record in result.data()]
 
         response = jsonify({"ingredients": data})
