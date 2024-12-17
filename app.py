@@ -176,7 +176,7 @@ def matchIngredients_es_options():
 
 @app.route("/api/elasticsearch/matchIngredientsAnd", methods=["POST"])
 def matchIngredientsAnd_es():
-    """Returns a list of recipes that must contain all the ingredients in the list. The results are sorted by the number of ingredients that match the query.
+    """Returns a list of recipes that must contain the last ingredient in the list while it should contain at least one other ingredient. The results are sorted by the number of ingredients that match the query.
     The ingredients are passed in the request body as a JSON object with the key "ingredients".
     A limit parameter can be passed in the request body to limit the number of results.
 
@@ -193,7 +193,20 @@ def matchIngredientsAnd_es():
                 "bool": {
                     "must": [
                         {"match":
-                         {"RecipeIngredientParts": ingredient}} for ingredient in ingredients
+                         {
+                             "RecipeIngredientParts": ingredients[-1]
+                         }
+                         }
+                    ],
+                    "must": [
+                        {
+                            "match": {
+                                "RecipeIngredientParts": {
+                                    "query": " ".join(ingredients[-1]),
+                                    "operator": "and"
+                                }
+                            }
+                        }
                     ]
                 }
             }
