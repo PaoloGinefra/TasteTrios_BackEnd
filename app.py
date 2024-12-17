@@ -175,7 +175,7 @@ def matchIngredients_es_options():
 
 
 @app.route("/api/elasticsearch/matchIngredientsAnd", methods=["POST"])
-def matchIngredients_es():
+def matchIngredientsAnd_es():
     """Returns a list of recipes that must contain all the ingredients in the list. The results are sorted by the number of ingredients that match the query.
     The ingredients are passed in the request body as a JSON object with the key "ingredients".
     A limit parameter can be passed in the request body to limit the number of results.
@@ -215,7 +215,7 @@ def matchIngredients_es():
 
 
 @app.route("/api/elasticsearch/matchIngredientsAnd", methods=["OPTIONS"])
-def matchIngredients_es_options():
+def matchIngredientsAnd_es_options():
     response = jsonify({"status": "OK"})
     response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
