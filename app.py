@@ -276,7 +276,7 @@ def mixAndMax():
     The average number of the given ingredients in the recipes is also calculated.
     A limit parameter can be passed in the request body to limit the number of results.
     Returns:
-        A JSON object with a key "ingredients" that is a list of objects with the keys "ingredient", "numRecipes", "avgRating" and "avgNumIngredients".
+        A JSON object with a key "ingredients" that is a list of objects with the keys "ingredient", "numRecipes", "avgRating" and "IngredientCompatibility".
     """
 
     try:
@@ -289,21 +289,20 @@ def mixAndMax():
                 limitString = f" LIMIT {limit}"
             result = session.run(
                 """
-                WITH $providedIngredients AS ingredients
                 // Find recipes that contain an existing ingredient and additional matched ingredients
                 MATCH (i:Ingredient)<-[:CONTAINS]-(r:Recipe)-[:CONTAINS]->(i1:Ingredient)
                 WHERE i.name IN ingredients AND NOT i1.name IN ingredients
-                WITH DISTINCT r, i1.name AS matchedIngredient, ingredients
+                WITH DISTINCT r, i1.name AS matchedIngredient, ingredients, COUNT(distinct i) as availableMatchedIngredients
 
                 // Match reviews for these recipes and calculate the average rating for each matched recipe
                 MATCH (r)<-[:FOR]-(rev:Review)
-                WITH matchedIngredient, r, AVG(rev.rating) AS avgRating, ingredients
+                WITH matchedIngredient, r, AVG(rev.rating) AS avgRating, ingredients, availableMatchedIngredients
 
                 // Count the number of unique recipes for each matched ingredient
                 MATCH (r)-[:CONTAINS]->(i:Ingredient)
                 WHERE i.name IN ingredients
-                RETURN matchedIngredient, COUNT(DISTINCT r) AS recipeCount, AVG(avgRating) AS avgOfAvgRatings
-                ORDER BY recipeCount DESC
+                RETURN matchedIngredient, COUNT(DISTINCT r) AS recipeCount, AVG(avgRating) AS avgOfAvgRatings, AVG(availableMatchedIngredients) as IngredientCompatibility
+                ORDER BY IngredientCompatibility DESC
                 """
                 + limitString, providedIngredients=ingredients)
             data = [record for record in result.data()]
