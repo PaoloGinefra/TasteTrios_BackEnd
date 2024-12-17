@@ -191,7 +191,7 @@ def matchIngredientsAnd_es():
         body = {
             "query": {
                 "bool": {
-                    "must": [
+                    "filter": [
                         {"match":
                          {
                              "RecipeIngredientParts": ingredients[-1]
