@@ -289,6 +289,7 @@ def mixAndMax():
                 limitString = f" LIMIT {limit}"
             result = session.run(
                 """
+                WITH $providedIngredients AS ingredients
                 // Find recipes that contain an existing ingredient and additional matched ingredients
                 MATCH (i:Ingredient)<-[:CONTAINS]-(r:Recipe)-[:CONTAINS]->(i1:Ingredient)
                 WHERE i.name IN ingredients AND NOT i1.name IN ingredients
