@@ -192,7 +192,7 @@ def matchIngredientsAnd_es():
             "query": {
                 "bool": {
                     "must": [{
-                        "match": {
+                        "term": {
                             "RecipeIngredientParts": {
                                 "query": " ".join(ingredients),
                                 "operator": "and"
