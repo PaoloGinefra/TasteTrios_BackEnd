@@ -262,9 +262,11 @@ def mixAndMax_option():
     response = jsonify({"status": "OK"})
     response.headers.add("Access-Control-Allow-Origin", "*")
     response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-    # Added 'Authorization' if needed
+    # Permetti altri header se necessari
     response.headers.add("Access-Control-Allow-Headers",
                          "Content-Type, Authorization")
+    # Se stai usando cookie di sessione
+    response.headers.add("Access-Control-Allow-Credentials", "true")
     return response
 
 
