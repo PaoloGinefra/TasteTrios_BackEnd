@@ -346,8 +346,8 @@ def elastic_queries():
 
         queryNumber = int(request.args.get('queryNumber'))
 
-        if (queryNumber < 0 or queryNumber >= len(elastic_queries)):
-            return jsonify({"error": f"Invalid query number, it should be between 0 and {len(elastic_queries) - 1}"}), 400
+        if (queryNumber < 0 or queryNumber >= len(elasticQueries)):
+            return jsonify({"error": f"Invalid query number, it should be between 0 and {len(elasticQueries) - 1}"}), 400
 
         limit = int(request.args['limit'])
 
