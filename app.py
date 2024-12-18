@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from flask_cors import CORS
 from elasticsearch import Elasticsearch
+from ElasticQueries import elasticQueries
 
 # Load environment variables from .env file
 load_dotenv()
@@ -324,6 +325,51 @@ def mixAndMax_option():
     response.headers.add("Access-Control-Allow-Headers",
                          "Content-Type, Authorization")
     response.headers.add("Access-Control-Allow-Credentials", "true")
+    return response
+
+
+@app.route("/api/elasticsearch/queries", methods=["POST"])
+def elastic_queries():
+    """Run an ElasticSearch query based on the query number and the JSON body.
+    The query number is passed as a query parameter.
+    The JSON body should contain the key "limit" with the number of results to return.
+
+    Returns:
+        A JSON object with the results of the ElasticSearch query.
+    """
+    try:
+        # Check for the arguments
+        # query = request.args.get('query')
+        if (request.json is None):
+            return jsonify({"error": "No JSON body found"}), 400
+
+        if ('queryNumber' not in request.args):
+            return jsonify({"error": "No query number found"}), 400
+
+        queryNumber = request.args.get('queryNumber')
+
+        if (queryNumber < 0 or queryNumber >= len(elastic_queries)):
+            return jsonify({"error": f"Invalid query number, it should be between 0 and {len(elastic_queries) - 1}"}), 400
+
+        query = elastic_queries[queryNumber]
+        limit = request.json['limit']
+
+        result = es.search(index="recipeswithreviews", body=query, size=limit)
+        data = [{"matchingScore": record['_score'], "recipe": record['_source']}
+                for record in result['hits']['hits']]
+        response = jsonify({"recipes": data})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/elasticsearch/queries", methods=["OPTIONS"])
+def elastic_queries_options():
+    response = jsonify({"status": "OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
     return response
 
 
