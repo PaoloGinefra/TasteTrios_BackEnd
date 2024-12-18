@@ -328,7 +328,7 @@ def mixAndMax_option():
     return response
 
 
-@app.route("/api/elasticsearch/queries", methods=["POST"])
+@app.route("/api/elasticsearch/queries", methods=["GET"])
 def elastic_queries():
     """Run an ElasticSearch query based on the query number and the JSON body.
     The query number is passed as a query parameter.
@@ -338,21 +338,23 @@ def elastic_queries():
         A JSON object with the results of the ElasticSearch query.
     """
     try:
-        # Check for the arguments
-        # query = request.args.get('query')
-        if (request.json is None):
-            return jsonify({"error": "No JSON body found"}), 400
-
         if ('queryNumber' not in request.args):
             return jsonify({"error": "No query number found"}), 400
 
-        queryNumber = request.args.get('queryNumber')
+        if ('limit' not in request.args):
+            return jsonify({"error": "No limit found"}), 400
+
+        queryNumber = int(request.args.get('queryNumber'))
 
         if (queryNumber < 0 or queryNumber >= len(elastic_queries)):
             return jsonify({"error": f"Invalid query number, it should be between 0 and {len(elastic_queries) - 1}"}), 400
 
+        limit = int(request.args['limit'])
+
+        if (limit < 0):
+            return jsonify({"error": "Limit should be greater than 0"}), 400
+
         query = elastic_queries[queryNumber]
-        limit = request.json['limit']
 
         result = es.search(index="recipeswithreviews", body=query, size=limit)
         data = [{"matchingScore": record['_score'], "recipe": record['_source']}
