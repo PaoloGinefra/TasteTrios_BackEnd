@@ -354,7 +354,7 @@ def elastic_queries():
         if (limit < 0):
             return jsonify({"error": "Limit should be greater than 0"}), 400
 
-        query = elastic_queries[queryNumber]
+        query = elasticQueries[queryNumber]
 
         result = es.search(index="recipeswithreviews", body=query, size=limit)
         data = [{"matchingScore": record['_score'], "recipe": record['_source']}
