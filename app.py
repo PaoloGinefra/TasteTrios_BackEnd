@@ -303,7 +303,7 @@ def mixAndMax():
                 MATCH (r)-[:CONTAINS]->(i:Ingredient)
                 WHERE i.name IN ingredients
                 RETURN matchedIngredient, COUNT(DISTINCT r) AS recipeCount, AVG(avgRating) AS avgOfAvgRatings, AVG(availableMatchedIngredients) as IngredientCompatibility
-                ORDER BY IngredientCompatibility DESC
+                ORDER BY IngredientCompatibility * log10(recipeCount) DESC
                 """
                 + limitString, providedIngredients=ingredients)
             data = [record for record in result.data()]
