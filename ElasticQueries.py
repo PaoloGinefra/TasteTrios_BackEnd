@@ -1,7 +1,5 @@
 import json
 
-# Load json form ./ElasticQueries.json
-
 
 def loadElasticQueries():
     with open('./ElasticQueries.json', 'r') as f:
