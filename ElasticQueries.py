@@ -185,25 +185,19 @@ elasticQueries = [
         }
     },
     {
-        "runtime_mappings": {
-            "pcratio": {
-                "type": "double",
-                "script": {
-                    "source": """
-          if (doc['Calories'].size() > 0 & & doc['Calories'].value != 0) {
-            emit(doc['ProteinContent'].value / doc['Calories'].value);
-          }
-        """
-                }
-            }
-        },
         "query": {
             "bool": {
-                "must": [
+                "filter": [
                     {
-                        "range": {
-                            "pcratio": {
-                                "gte": 0.2
+                        "script": {
+                            "script": {
+                                "source": """
+                if (doc['Calories'].size() > 0 && doc['Calories'].value != 0) {
+                  return doc['ProteinContent'].value / doc['Calories'].value >= 0.2;
+                } else {
+                  return false;
+                }
+              """
                             }
                         }
                     }
