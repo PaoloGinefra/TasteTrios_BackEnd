@@ -1,2 +1,4 @@
 /Dataset
 .env
+/venv
+/_pycache_
