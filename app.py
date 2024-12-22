@@ -357,9 +357,15 @@ def elastic_queries():
         query = elasticQueries[queryNumber]
 
         result = es.search(index="recipeswithreviews", body=query, size=limit)
-        data = [{"matchingScore": record['_score'], "recipe": record['_source']}
-                for record in result['hits']['hits']]
-        response = jsonify({"recipes": data})
+
+        if ('aggregations' not in result):
+            data = [{"matchingScore": record['_score'], "recipe": record['_source']}
+                    for record in result['hits']['hits']]
+            response = jsonify({"recipes": data})
+        else:
+            data = result['aggregations']
+            response = jsonify(data)
+
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
     except Exception as e:
