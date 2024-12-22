@@ -364,7 +364,7 @@ def elastic_queries():
             response = jsonify({"recipes": data})
         else:
             data = result['aggregations']
-            response = jsonify(data)
+            response = jsonify({"aggregations": data})
 
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
